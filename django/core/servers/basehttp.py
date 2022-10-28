@@ -8,10 +8,10 @@ been reviewed for security issues. DON'T USE IT FOR PRODUCTION USE!
 """
 
 import logging
-import socket
+# import socket
 import socketserver
 import sys
-from wsgiref import simple_server
+from django.auditing import audit_server
 
 from django.core.exceptions import ImproperlyConfigured
 from django.core.handlers.wsgi import LimitedStream
@@ -64,7 +64,7 @@ def is_broken_pipe_error():
     )
 
 
-class WSGIServer(simple_server.WSGIServer):
+class WSGIServer(audit_server.WSGIServer):
     """BaseHTTPServer that implements the Python WSGI protocol"""
 
     request_queue_size = 10
@@ -110,7 +110,7 @@ class ThreadedWSGIServer(socketserver.ThreadingMixIn, WSGIServer):
         super().close_request(request)
 
 
-class ServerHandler(simple_server.ServerHandler):
+class ServerHandler(audit_server.ServerHandler):
     http_version = "1.1"
 
     def __init__(self, stdin, stdout, stderr, environ, **kwargs):
@@ -148,7 +148,7 @@ class ServerHandler(simple_server.ServerHandler):
         super().close()
 
 
-class WSGIRequestHandler(simple_server.WSGIRequestHandler):
+class WSGIRequestHandler(audit_server.WSGIRequestHandler):
     protocol_version = "HTTP/1.1"
 
     def address_string(self):
