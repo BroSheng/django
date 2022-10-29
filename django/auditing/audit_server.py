@@ -15,7 +15,7 @@ For example usage, see the 'if __name__=="__main__"' block at the end of the
 module.  See also the BaseHTTPServer module docs for other API information.
 """
 
-from server import BaseHTTPRequestHandler, HTTPServer
+from django.auditing.server import BaseHTTPRequestHandler, HTTPServer
 import sys
 import urllib.parse
 from wsgiref.handlers import SimpleHandler
