@@ -302,6 +302,7 @@ class socket(_socket.socket):
         # mode to override platform-specific socket flags inheritance.
         if getdefaulttimeout() is None and self.gettimeout():
             sock.setblocking(True)
+        print("accept() executed: fd: ", fd, " addr: ", addr)
         return sock, addr
 
     def makefile(self, mode="r", buffering=None, *,
@@ -311,6 +312,7 @@ class socket(_socket.socket):
         The arguments are as for io.open() after the filename, except the only
         supported mode values are 'r' (default), 'w' and 'b'.
         """
+        print("makefile() executed! mode = ", mode, "socket = ", self.__str__())
         # XXX refactor to share code?
         if not set(mode) <= {"r", "w", "b"}:
             raise ValueError("invalid mode %r (only r, w, b allowed)" % (mode,))
@@ -700,6 +702,8 @@ class SocketIO(io.RawIOBase):
         If *b* is non-empty, a 0 return value indicates that the connection
         was shutdown at the other end.
         """
+        print("readinto() executed! socket = ", self.__str__(), "content = ",
+              b.tobytes())
         self._checkClosed()
         self._checkReadable()
         if self._timeout_occurred:
@@ -721,6 +725,8 @@ class SocketIO(io.RawIOBase):
         len(b) if not all data could be written.  If the socket is
         non-blocking and no bytes could be written None is returned.
         """
+        print("write() executed! socket = ", self.__str__(), "content = ",
+              b.tobytes())
         self._checkClosed()
         self._checkWritable()
         try:
@@ -773,6 +779,7 @@ class SocketIO(io.RawIOBase):
         """Close the SocketIO object.  This doesn't close the underlying
         socket, except if all references to it have disappeared.
         """
+        print("close() executed! closed = ", self.closed, "socket = ", self.__str__())
         if self.closed:
             return
         io.RawIOBase.close(self)
