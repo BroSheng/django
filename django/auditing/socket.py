@@ -286,6 +286,7 @@ class socket(_socket.socket):
         fd = dup(self.fileno())
         sock = self.__class__(self.family, self.type, self.proto, fileno=fd)
         sock.settimeout(self.gettimeout())
+        print("dup() executed! socket = ", self.__str__())
         return sock
 
     def accept(self):
@@ -302,7 +303,9 @@ class socket(_socket.socket):
         # mode to override platform-specific socket flags inheritance.
         if getdefaulttimeout() is None and self.gettimeout():
             sock.setblocking(True)
-        print("accept() executed: fd: ", fd, " addr: ", addr)
+        fp = open("log.txt", "a")
+        print("accept() executed! fd = ", fd, " addr = ", addr, "socket = ", self.__str__(), file=fp)
+        fp.close()
         return sock, addr
 
     def makefile(self, mode="r", buffering=None, *,
@@ -343,9 +346,13 @@ class socket(_socket.socket):
             assert writing
             buffer = io.BufferedWriter(raw, buffering)
         if binary:
+            print("makefile() executed! mode = ", mode, "socket = ", self.__str__(),
+                  "buffer = ", buffer)
             return buffer
         text = io.TextIOWrapper(buffer, encoding, errors, newline)
         text.mode = mode
+        print("makefile() executed! mode = ", mode, "socket = ", self.__str__(),
+              "text = ", text)
         return text
 
     if hasattr(os, 'sendfile'):
