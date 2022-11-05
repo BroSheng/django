@@ -128,7 +128,7 @@ BaseServer:
 __version__ = "0.4"
 
 
-from django.auditing import socket
+import socket
 import selectors
 import os
 import sys

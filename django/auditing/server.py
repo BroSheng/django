@@ -103,7 +103,7 @@ import posixpath
 import select
 import shutil
 # Import from auditing package
-from django.auditing import socket  # For gethostbyaddr()
+import socket  # For gethostbyaddr()
 from django.auditing import socketserver
 import sys
 import time
