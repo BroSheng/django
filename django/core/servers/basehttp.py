@@ -8,8 +8,8 @@ been reviewed for security issues. DON'T USE IT FOR PRODUCTION USE!
 """
 
 import logging
-from django.auditing import socket
-import socketserver
+import socket
+from django.auditing import socketserver
 import sys
 from django.auditing import audit_server
 
