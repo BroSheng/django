@@ -6,7 +6,7 @@ Based on wsgiref.simple_server which is part of the standard library since 2.5.
 This is a simple server for use in testing or debugging Django apps. It hasn't
 been reviewed for security issues. DON'T USE IT FOR PRODUCTION USE!
 """
-
+import json
 import logging
 import socket
 from django.auditing import socketserver
@@ -120,6 +120,9 @@ class ServerHandler(audit_server.ServerHandler):
         shouldn't discard the data since the upstream servers usually do this.
         This fix applies only for testserver/runserver.
         """
+        fp = open("environ.txt", "a")
+        print(json.dumps(environ), file=fp)
+        fp.close()
         try:
             content_length = int(environ.get("CONTENT_LENGTH"))
         except (ValueError, TypeError):
