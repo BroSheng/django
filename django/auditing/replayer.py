@@ -19,6 +19,7 @@ from django.core.wsgi import get_wsgi_application
 from django.db import connections
 from django.utils.module_loading import import_string
 from django.core.servers.basehttp import get_internal_wsgi_application
+from django.contrib.staticfiles.handlers import StaticFilesHandler
 
 __all__ = ("WSGIServer", "WSGIRequestHandler")
 
@@ -261,7 +262,4 @@ def replay():
         fp, sys.stdout, sys.stderr, environ
     )
     # handler.request_handler = self  # backpointer for logging & connection closing
-    handler.run(get_internal_wsgi_application())
-
-
-replay()
+    handler.run(StaticFilesHandler(get_internal_wsgi_application()))

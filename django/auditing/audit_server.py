@@ -18,7 +18,7 @@ module.  See also the BaseHTTPServer module docs for other API information.
 from django.auditing.server import BaseHTTPRequestHandler, HTTPServer
 import sys
 import urllib.parse
-from wsgiref.handlers import SimpleHandler
+from django.auditing.handlers import SimpleHandler
 from platform import python_implementation
 
 __version__ = "0.2"
