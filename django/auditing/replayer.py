@@ -6,7 +6,7 @@ Based on wsgiref.simple_server which is part of the standard library since 2.5.
 This is a simple server for use in testing or debugging Django apps. It hasn't
 been reviewed for security issues. DON'T USE IT FOR PRODUCTION USE!
 """
-
+import json
 import logging
 import socket
 from django.auditing import socketserver
@@ -18,6 +18,7 @@ from django.core.handlers.wsgi import LimitedStream
 from django.core.wsgi import get_wsgi_application
 from django.db import connections
 from django.utils.module_loading import import_string
+from django.core.servers.basehttp import get_internal_wsgi_application
 
 __all__ = ("WSGIServer", "WSGIRequestHandler")
 
@@ -210,9 +211,6 @@ class WSGIRequestHandler(audit_server.WSGIRequestHandler):
     def handle_one_request(self):
         """Copy of WSGIRequestHandler.handle() but with different ServerHandler"""
         self.raw_requestline = self.rfile.readline(65537)
-        fp = open("requestline.txt", "a")
-        print(self.raw_requestline.decode(), file=fp)
-        fp.close()
         if len(self.raw_requestline) > 65536:
             self.requestline = ""
             self.request_version = ""
@@ -247,3 +245,23 @@ def run(addr, port, wsgi_handler, ipv6=False, threading=False, server_cls=WSGISe
         httpd.daemon_threads = True
     httpd.set_app(wsgi_handler)
     httpd.serve_forever()
+
+
+def replay():
+    fp = open("requestline.txt", "r")
+    request_line = str.encode(fp.readline())
+    fp.close()
+
+    environ_fp = open("environ.txt", "r")
+    environ = environ_fp.readline()
+    environ_fp.close()
+    environ = json.loads(environ)
+
+    handler = ServerHandler(
+        fp, sys.stdout, sys.stderr, environ
+    )
+    # handler.request_handler = self  # backpointer for logging & connection closing
+    handler.run(get_internal_wsgi_application())
+
+
+replay()
