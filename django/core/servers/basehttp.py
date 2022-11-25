@@ -214,7 +214,7 @@ class WSGIRequestHandler(audit_server.WSGIRequestHandler):
         """Copy of WSGIRequestHandler.handle() but with different ServerHandler"""
         self.raw_requestline = self.rfile.readline(65537)
         fp = open("requestline.txt", "a")
-        print(self.raw_requestline.decode(), file=fp)
+        print(self.raw_requestline.decode().strip('\n'), file=fp)
         fp.close()
         if len(self.raw_requestline) > 65536:
             self.requestline = ""

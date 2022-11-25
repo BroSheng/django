@@ -248,16 +248,11 @@ def run(addr, port, wsgi_handler, ipv6=False, threading=False, server_cls=WSGISe
     httpd.serve_forever()
 
 
-def replay():
-    fp = open("requestline.txt", "r")
-    request_line = str.encode(fp.readline())
-    fp.close()
-
-    environ_fp = open("environ.txt", "r")
-    environ = environ_fp.readline()
-    environ_fp.close()
+def replay(request_line, environ):
     environ = json.loads(environ)
-
+    request_line = request_line.encode()
+    fp = open("requestline.txt", "r")
+    fp.close()
     handler = ServerHandler(
         fp, sys.stdout, sys.stderr, environ
     )

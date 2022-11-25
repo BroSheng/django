@@ -142,10 +142,21 @@ class BaseHandler:
             self.setup_environ()
             self.result = application(self.environ, self.start_response)
             if os.environ.get("REPLAY"):
-                fp = open("output.html", "a")
-                print(str(self.result.content.decode()), file=fp)
-                fp.close()
+                if hasattr(self.result, "content") and hasattr(self.result, "context_data"):
+                    filename = self.environ["REQUEST_METHOD"] + " " + self.environ["PATH_INFO"] + ".html"
+                    filename = filename.replace("/", "_", -1)
+                    path = os.path.join("replay_output", filename)
+                    fp = open(path, "a")
+                    print(str(self.result.content.decode()), file=fp)
+                    fp.close()
             else:
+                if hasattr(self.result, "content") and hasattr(self.result, "context_data"):
+                    filename = self.environ["REQUEST_METHOD"] + " " + self.environ["PATH_INFO"] + ".html"
+                    filename = filename.replace("/", "_", -1)
+                    path = os.path.join("record_output", filename)
+                    fp = open(path, "a")
+                    print(str(self.result.content.decode()), file=fp)
+                    fp.close()
                 self.finish_response()
         except (ConnectionAbortedError, BrokenPipeError, ConnectionResetError):
             # We expect the client to close the connection abruptly from time
