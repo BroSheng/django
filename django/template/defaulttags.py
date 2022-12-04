@@ -1,5 +1,6 @@
 """Default tags used by the template system, available to all templates."""
 import re
+import os
 import sys
 import warnings
 from collections import namedtuple
@@ -67,7 +68,23 @@ class CommentNode(Node):
 class CsrfTokenNode(Node):
     child_nodelists = ()
 
+    def __init__(self):
+        self.counter = 0
+        if os.environ.get("REPLAY"):
+            fp = open("csrf.txt", "r")
+            self.lines = fp.readlines()
+            fp.close()
+
     def render(self, context):
+        if os.environ.get("REPLAY"):
+            csrf_token = self.lines[self.counter].strip('\n')
+            self.counter = self.counter + 1
+        else:
+            csrf_token = context.get("csrf_token")
+            fp = open("csrf.txt", "a")
+            print(csrf_token, file=fp)
+            fp.close()
+
         csrf_token = context.get("csrf_token")
         if csrf_token:
             if csrf_token == "NOTPROVIDED":
