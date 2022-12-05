@@ -143,20 +143,34 @@ class BaseHandler:
             self.result = application(self.environ, self.start_response)
             if os.environ.get("REPLAY"):
                 if hasattr(self.result, "content") and hasattr(self.result, "context_data"):
+                    counter_fp = open("replay_output/counter.txt", "r")
+                    counter = counter_fp.readline().strip('\n')
+                    counter_fp.close()
                     filename = self.environ["REQUEST_METHOD"] + " " + self.environ["PATH_INFO"] + ".html"
                     filename = filename.replace("/", "_", -1)
                     path = os.path.join("replay_output", filename)
                     fp = open(path, "a")
                     print(str(self.result.content.decode()), file=fp)
                     fp.close()
+                    counter = int(counter) + 1
+                    counter_fp = open("replay_output/counter.txt", "w")
+                    print(str(counter), file=counter_fp)
+                    counter_fp.close()
             else:
                 if hasattr(self.result, "content") and hasattr(self.result, "context_data"):
+                    counter_fp = open("record_output/counter.txt", "r")
+                    counter = counter_fp.readline().strip('\n')
+                    counter_fp.close()
                     filename = self.environ["REQUEST_METHOD"] + " " + self.environ["PATH_INFO"] + ".html"
                     filename = filename.replace("/", "_", -1)
                     path = os.path.join("record_output", filename)
                     fp = open(path, "a")
                     print(str(self.result.content.decode()), file=fp)
                     fp.close()
+                    counter = int(counter) + 1
+                    counter_fp = open("record_output/counter.txt", "w")
+                    print(str(counter), file=counter_fp)
+                    counter_fp.close()
                 self.finish_response()
         except (ConnectionAbortedError, BrokenPipeError, ConnectionResetError):
             # We expect the client to close the connection abruptly from time
