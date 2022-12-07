@@ -123,7 +123,7 @@ class ServerHandler(audit_server.ServerHandler):
         This fix applies only for testserver/runserver.
         """
         try:
-            content_length = int(environ.get("CONTENT_LENGTH"))
+            content_length = int(environ[0].get("CONTENT_LENGTH"))
         except (ValueError, TypeError):
             content_length = 0
         super().__init__(
@@ -258,3 +258,13 @@ def replay(request_line, environ):
     )
     # handler.request_handler = self  # backpointer for logging & connection closing
     handler.run(StaticFilesHandler(get_internal_wsgi_application()))
+
+def accelerated_replay(environs):
+    fp = open("requestline.txt", "r")
+    fp.close()
+    handler = ServerHandler(
+        fp, sys.stdout, sys.stderr, environs
+    )
+    # handler.request_handler = self  # backpointer for logging & connection closing
+    handler.run(StaticFilesHandler(get_internal_wsgi_application()))
+

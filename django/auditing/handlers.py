@@ -140,38 +140,50 @@ class BaseHandler:
         # closing if there might still be output to iterate over.
         try:
             self.setup_environ()
-            self.result = application(self.environ, self.start_response)
-            if os.environ.get("REPLAY"):
-                if hasattr(self.result, "content") and hasattr(self.result, "context_data"):
-                    counter_fp = open("replay_output/counter.txt", "r")
-                    counter = counter_fp.readline().strip('\n')
-                    counter_fp.close()
-                    filename = self.environ["REQUEST_METHOD"] + " " + self.environ["PATH_INFO"] + ".html"
-                    filename = filename.replace("/", "_", -1)
-                    path = os.path.join("replay_output", filename)
-                    fp = open(path, "a")
-                    print(str(self.result.content.decode()), file=fp)
-                    fp.close()
-                    counter = int(counter) + 1
-                    counter_fp = open("replay_output/counter.txt", "w")
-                    print(str(counter), file=counter_fp)
-                    counter_fp.close()
-            else:
-                if hasattr(self.result, "content") and hasattr(self.result, "context_data"):
-                    counter_fp = open("record_output/counter.txt", "r")
-                    counter = counter_fp.readline().strip('\n')
-                    counter_fp.close()
-                    filename = self.environ["REQUEST_METHOD"] + " " + self.environ["PATH_INFO"] + ".html"
-                    filename = filename.replace("/", "_", -1)
-                    path = os.path.join("record_output", filename)
-                    fp = open(path, "a")
-                    print(str(self.result.content.decode()), file=fp)
-                    fp.close()
-                    counter = int(counter) + 1
-                    counter_fp = open("record_output/counter.txt", "w")
-                    print(str(counter), file=counter_fp)
-                    counter_fp.close()
-                self.finish_response()
+            counter = 0
+            self.result = []
+            while counter < len(self.base_env):
+                self.result.append(
+                    application(self.environ[counter], self.start_response))
+                # self.result = application(self.environ, self.start_response)
+                if os.environ.get("REPLAY"):
+                    if hasattr(self.result[counter], "content") and hasattr(
+                        self.result[counter], "context_data"):
+                        counter_fp = open("replay_output/counter.txt", "r")
+                        file_counter = counter_fp.readline().strip('\n')
+                        counter_fp.close()
+                        filename = file_counter + self.environ[counter][
+                            "REQUEST_METHOD"] + " " + self.environ[counter][
+                                       "PATH_INFO"] + ".html"
+                        filename = filename.replace("/", "_", -1)
+                        path = os.path.join("replay_output", filename)
+                        fp = open(path, "a")
+                        print(str(self.result[counter].content.decode()), file=fp)
+                        fp.close()
+                        file_counter = int(file_counter) + 1
+                        counter_fp = open("replay_output/counter.txt", "w")
+                        print(str(file_counter), file=counter_fp)
+                        counter_fp.close()
+                else:
+                    if hasattr(self.result[counter], "content") and hasattr(
+                        self.result[counter], "context_data"):
+                        counter_fp = open("record_output/counter.txt", "r")
+                        file_counter = counter_fp.readline().strip('\n')
+                        counter_fp.close()
+                        filename = file_counter + self.environ[counter][
+                            "REQUEST_METHOD"] + " " + self.environ[counter][
+                                       "PATH_INFO"] + ".html"
+                        filename = filename.replace("/", "_", -1)
+                        path = os.path.join("record_output", filename)
+                        fp = open(path, "a")
+                        print(str(self.result[counter].content.decode()), file=fp)
+                        fp.close()
+                        file_counter = int(file_counter) + 1
+                        counter_fp = open("record_output/counter.txt", "w")
+                        print(str(file_counter), file=counter_fp)
+                        counter_fp.close()
+                    self.finish_response()
+                counter = counter + 1
         except (ConnectionAbortedError, BrokenPipeError, ConnectionResetError):
             # We expect the client to close the connection abruptly from time
             # to time.
@@ -188,22 +200,31 @@ class BaseHandler:
     def setup_environ(self):
         """Set up the environment for one request"""
 
-        env = self.environ = self.os_environ.copy()
-        self.add_cgi_vars()
+        counter = 0
+        env = []
+        self.environ = []
+        while counter < len(self.base_env):
 
-        env['wsgi.input']        = self.get_stdin()
-        env['wsgi.errors']       = self.get_stderr()
-        env['wsgi.version']      = self.wsgi_version
-        env['wsgi.run_once']     = self.wsgi_run_once
-        env['wsgi.url_scheme']   = self.get_scheme()
-        env['wsgi.multithread']  = self.wsgi_multithread
-        env['wsgi.multiprocess'] = self.wsgi_multiprocess
+            # env[counter] = self.environ[counter] = self.os_environ.copy()
+            self.environ.append(self.os_environ.copy())
+            env.append(self.environ[counter])
+            self.add_cgi_vars(counter)
 
-        if self.wsgi_file_wrapper is not None:
-            env['wsgi.file_wrapper'] = self.wsgi_file_wrapper
+            env[counter]['wsgi.input'] = self.get_stdin()
+            env[counter]['wsgi.errors'] = self.get_stderr()
+            env[counter]['wsgi.version'] = self.wsgi_version
+            env[counter]['wsgi.run_once'] = self.wsgi_run_once
+            env[counter]['wsgi.url_scheme'] = self.get_scheme(counter)
+            env[counter]['wsgi.multithread'] = self.wsgi_multithread
+            env[counter]['wsgi.multiprocess'] = self.wsgi_multiprocess
 
-        if self.origin_server and self.server_software:
-            env.setdefault('SERVER_SOFTWARE',self.server_software)
+            if self.wsgi_file_wrapper is not None:
+                env[counter]['wsgi.file_wrapper'] = self.wsgi_file_wrapper
+
+            if self.origin_server and self.server_software:
+                env[counter].setdefault('SERVER_SOFTWARE', self.server_software)
+
+            counter = counter + 1
 
 
     def finish_response(self):
@@ -232,9 +253,9 @@ class BaseHandler:
             self.close()
 
 
-    def get_scheme(self):
+    def get_scheme(self, counter):
         """Return the URL scheme being used"""
-        return guess_scheme(self.environ)
+        return guess_scheme(self.environ[counter])
 
 
     def set_content_length(self):
@@ -269,7 +290,8 @@ class BaseHandler:
             finally:
                 exc_info = None        # avoid dangling circular ref
         elif self.headers is not None:
-            raise AssertionError("Headers already set!")
+            self.headers = None
+            # raise AssertionError("Headers already set!")
 
         self.status = status
         self.headers = self.headers_class(headers)
@@ -496,8 +518,8 @@ class SimpleHandler(BaseHandler):
     def get_stderr(self):
         return self.stderr
 
-    def add_cgi_vars(self):
-        self.environ.update(self.base_env)
+    def add_cgi_vars(self, counter):
+        self.environ[counter].update(self.base_env[counter])
 
     def _write(self,data):
         result = self.stdout.write(data)
